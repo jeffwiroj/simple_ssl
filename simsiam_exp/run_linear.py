@@ -36,6 +36,7 @@ def get_config():
 
 #Loads weights using last epoch or best epoch
 #Default = Last
+
 def get_model(use_best = False):
    
     filename = "model_best.pth.tar" if use_best else "checkpoint.pth.tar"
@@ -44,10 +45,7 @@ def get_model(use_best = False):
     simsiam_ = SimSiam()
     simsiam_.load_state_dict(checkpoint['model_state_dict'])
     backbone = simsiam_.backbone
-    for param in backbone.parameters():
-        param.require_grad = False
     model = nn.Sequential(backbone,nn.Flatten(),nn.Linear(512,9))
-
     return model
     
 
@@ -174,7 +172,11 @@ def main():
 
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr= config["lr"],weight_decay = config["wd"],momentum=0.9)
+    param_dict = [
+                {'params': model[0].parameters(),'lr':config["lr"] },
+                {'params': model[2].parameters(), 'lr': config["lr"]}
+            ]
+    optimizer = optim.SGD(param_dict,weight_decay = config["wd"],momentum=0.9)
     train_n_val(model,optimizer,criterion,train_loader,val_loader,writer,config)
     test_acc,test_loss = val(model,criterion,test_loader)
     print(f"Test Accuracy: {test_acc}, Test Loss:{test_loss}")

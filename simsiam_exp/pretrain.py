@@ -30,7 +30,7 @@ def get_config():
     parser.add_argument('--base_lr',default = 0.05,type = int, help = 'base learning rate')
     parser.add_argument('--wd',default = 0.0001,type = float, help = 'Weight Decay')
 
-    parser.add_argument('--epochs',default = 200, type = int)
+    parser.add_argument('--epochs',default = 600, type = int)
 
     args = vars(parser.parse_args())
     args["init_lr"] = (args["batch_size"]/256)*args["base_lr"]
