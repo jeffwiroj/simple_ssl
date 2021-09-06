@@ -13,9 +13,9 @@ sys.path.append('../')
 import utils
 import math
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-from simsiam.model import SimSiam,SimSiamLoss
+from barlow_twin.model import BarlowTwin,BTLoss
 import shutil
-
+import os.path,os
 
 
 
@@ -29,8 +29,8 @@ def get_config():
     parser.add_argument('--batch_size',default = 512,type = int, help = 'Batch Size')
     parser.add_argument('--base_lr',default = 0.05,type = int, help = 'base learning rate')
     parser.add_argument('--wd',default = 0.0001,type = float, help = 'Weight Decay')
-
-    parser.add_argument('--epochs',default = 250, type = int)
+    parser.add_argument('--lambda',default = 5e-3,type = float, help = 'BT Lambda Parameter')
+    parser.add_argument('--epochs',default = 600, type = int)
 
     args = vars(parser.parse_args())
     args["init_lr"] = (args["batch_size"]/256)*args["base_lr"]
@@ -47,6 +47,7 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 def save_checkpoint(model,optimizer, is_best, epoch,loss,filename='checkpoint.pth.tar'):
+    if(os.path.exists("results/checkpoint") == False): os.makedirs('results/checkpoint')
     torch.save({
             'epoch': epoch,
             'model_state_dict':model.state_dict(),
@@ -55,6 +56,7 @@ def save_checkpoint(model,optimizer, is_best, epoch,loss,filename='checkpoint.pt
             }, f"results/checkpoint/{filename}")
     
     if is_best:
+        
         best_file = 'model_best.pth.tar' if "cosine" not in filename else 'model_best_cosine.pth.tar'
         shutil.copyfile(f"results/checkpoint/{filename}", f"results/checkpoint/{best_file}")
 
@@ -62,9 +64,9 @@ def save_checkpoint(model,optimizer, is_best, epoch,loss,filename='checkpoint.pt
         
         
 '''
-Trains SimSiam Model
+Trains BarlowTwin Model
 Model: SimSiam Model
-Criterion: Negative Cosine Similarity Loss defined in paper, see simsiam folder
+Criterion: BT Loss, see paper
 '''
 def train(model,criterion,optimizer,data_loader,writer,args):
     
@@ -125,9 +127,9 @@ def main():
     writer.add_text("WD", str(config["wd"]))
     dataset = get_dataset()
     ssl_loader =  DataLoader(dataset['unlabel_set'], batch_size=512,shuffle = True, pin_memory = True,num_workers = 4)
-    model = SimSiam()
+    model = BarlowTwin()
     model = model.to(device)
-    criterion = SimSiamLoss()
+    criterion = BTLoss(l_param = config["lambda"])
     optimizer = optim.SGD(model.parameters(), lr = config["init_lr"],weight_decay = config["wd"],momentum=0.9)
 
     train(model,criterion,optimizer,ssl_loader,writer,config)
