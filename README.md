@@ -1,5 +1,5 @@
 ## Evaluating Self-supervised Learning Algorithms on the PathMnist Dataset
-- The goal of this project is to use 10% of the labeled training data to finetune the linear layer of a classifier, while using only the images of the remaining 90% to pretrain some backbone network. 
+- The goal of this project is to pretrain the backbone of a NN using recent SSL algorithms on 90% of the training set and finetuning the network on 10% of the training set.
 For this project, I used resnet34 as the backbone network.
 
 - This dataset diverges from the standard evaluating datasets(Imagenet, Cifar, etc.).
@@ -19,6 +19,13 @@ For this project, I used resnet34 as the backbone network.
 - dataset.py: Creates and returns the pytorch datasets (train, unlabel, val, test).
 - pretrain.py: Pretrains the backbone using SimSiam on the unlabel dataset
 - run_linear.py: Finetunes only the linear layer of the resnet and evaluates the finetuned resnet on the test-set.
+
+## Results:
+| Pretrain Method | Test Accuracy (%)|
+| --------------- | ----------------- |
+| None | 73.62 |
+| SimSiam | 77.52 |
+| Barlow Twin | 78.2 |
 
 ## Todo:
 - Add more SSL algos.
